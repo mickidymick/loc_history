@@ -7,7 +7,7 @@ typedef struct loc_data{
     int col;
     int can_update;
 }loc_data_t;
-use_tree(yedrc_path_t, loc_data_t);
+use_tree_c(yedrc_path_t, loc_data_t, strcmp);
 
 void init_loc_history(yed_event *event);
 void set_start_loc_from_history(yed_event *event);
