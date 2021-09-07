@@ -144,6 +144,7 @@ void update_loc_history(yed_event *event) {
 void write_back_loc_history(yed_event *event) {
     char str[512];
     char app[512];
+    tree_it(yedrc_path_t, loc_data_t) it;
 
     strcpy(app, "/my_loc_history.txt");
 
@@ -158,12 +159,44 @@ void write_back_loc_history(yed_event *event) {
 
     FILE *fp;
 
+    /* grab latest adds */
+    fp = fopen (str, "r");
+    if (fp == NULL) {
+        return;
+    }
+
+    const char s[2] = " ";
+    char *tmp_path;
+    char *tmp_row;
+    char *tmp_col;
+    char line[512];
+
+    while( fgets( line, 512, fp ) != NULL ) {
+        tmp_path = strtok(line, s);
+        tmp_row = strtok(NULL, s);
+        tmp_col = strtok(NULL, s);
+
+        loc_data_t tmp;
+        tmp.row = atoi(tmp_row);
+        tmp.col = atoi(tmp_col);
+        tmp.can_update = 0;
+
+        it = tree_lookup(hist, tmp_path);
+        if( tree_it_good(it) ) {
+            if(tree_it_val(it).can_update == 0) {
+                tree_insert(hist, strdup(tmp_path), tmp);
+            }
+        }else {
+            tree_insert(hist, strdup(tmp_path), tmp);
+        }
+    }
+    fclose(fp);
+
     fp = fopen (str, "w+");
     if (fp == NULL) {
         return;
     }
 
-    tree_it(yedrc_path_t, loc_data_t) it;
     tree_traverse(hist, it) {
         fprintf(fp, "%s %d %d\n", tree_it_key(it), tree_it_val(it).row, tree_it_val(it).col);
     }
