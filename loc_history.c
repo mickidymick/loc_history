@@ -49,21 +49,25 @@ void init_loc_history(yed_event *event) {
     char line[512];
     char str[512];
     char app[512];
+    char *path;
+    FILE *fp;
 
     strcpy(app, "/my_loc_history.txt");
 
+    LOG_FN_ENTER();
     if (!ys->options.no_init) {
         if (ys->options.init) {
             abs_path(ys->options.init, str);
+            strcat(str, app);
+            fp = fopen (str, "r");
         } else {
-            abs_path("~/.yed", str);
-        }
-        strcat(str, app);
+            path = get_config_item_path("my_loc_history.txt");
+            fp = fopen (path, "r");
+            yed_cerr("path: %s\n", path);
+    	    free(path);
+	    }
     }
 
-    FILE *fp;
-
-    fp = fopen (str, "r");
     if (fp == NULL) {
         return;
     }
@@ -85,6 +89,11 @@ void init_loc_history(yed_event *event) {
     }
     fclose(fp);
     yed_delete_event_handler(h1);
+
+    yed_cprint("loc_history initialized");
+
+    yed_cerr("size: %d\n", tree_len(hist));
+    LOG_EXIT();
 }
 
 void set_start_loc_from_history(yed_event *event) {
@@ -144,6 +153,8 @@ void update_loc_history(yed_event *event) {
 void write_back_loc_history(yed_event *event) {
     char str[512];
     char app[512];
+    char *path;
+    FILE *fp;
     tree_it(yedrc_path_t, loc_data_t) it;
 
     strcpy(app, "/my_loc_history.txt");
@@ -151,16 +162,16 @@ void write_back_loc_history(yed_event *event) {
     if (!ys->options.no_init) {
         if (ys->options.init) {
             abs_path(ys->options.init, str);
+            strcat(str, app);
+            fp = fopen (str, "r");
         } else {
-            abs_path("~/.yed", str);
+            path = get_config_item_path("my_loc_history.txt");
+            fp = fopen (path, "r");
+    	    free(path);
         }
-        strcat(str, app);
     }
 
-    FILE *fp;
-
     /* grab latest adds */
-    fp = fopen (str, "r");
     if (fp == NULL) {
         return;
     }
@@ -192,7 +203,18 @@ void write_back_loc_history(yed_event *event) {
     }
     fclose(fp);
 
-    fp = fopen (str, "w+");
+    if (!ys->options.no_init) {
+        if (ys->options.init) {
+            abs_path(ys->options.init, str);
+            strcat(str, app);
+            fp = fopen (str, "w+");
+        } else {
+            path = get_config_item_path("my_loc_history.txt");
+            fp = fopen (path, "w+");
+    	    free(path);
+        }
+    }
+
     if (fp == NULL) {
         return;
     }
