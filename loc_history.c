@@ -192,15 +192,9 @@ void write_back_loc_history(yed_event *event) {
     fclose(fp);
 
     if (!ys->options.no_init) {
-        if (ys->options.init) {
-            abs_path(ys->options.init, str);
-            strcat(str, app);
-            fp = fopen (str, "w+");
-        } else {
-            path = get_config_item_path("my_loc_history.txt");
-            fp = fopen (path, "w+");
-    	    free(path);
-        }
+        path = get_config_item_path("my_loc_history.txt");
+        fp = fopen (path, "w+");
+    	free(path);
     }
 
     if (fp == NULL) {
