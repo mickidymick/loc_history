@@ -56,16 +56,10 @@ void init_loc_history(yed_event *event) {
 
     LOG_FN_ENTER();
     if (!ys->options.no_init) {
-        if (ys->options.init) {
-            abs_path(ys->options.init, str);
-            strcat(str, app);
-            fp = fopen (str, "r");
-        } else {
-            path = get_config_item_path("my_loc_history.txt");
-            fp = fopen (path, "r");
-            yed_cerr("path: %s\n", path);
-    	    free(path);
-	    }
+        path = get_config_item_path("my_loc_history.txt");
+        fp = fopen (path, "r");
+        yed_cerr("path: %s\n", path);
+	    free(path);
     }
 
     if (fp == NULL) {
@@ -160,15 +154,9 @@ void write_back_loc_history(yed_event *event) {
     strcpy(app, "/my_loc_history.txt");
 
     if (!ys->options.no_init) {
-        if (ys->options.init) {
-            abs_path(ys->options.init, str);
-            strcat(str, app);
-            fp = fopen (str, "r");
-        } else {
-            path = get_config_item_path("my_loc_history.txt");
-            fp = fopen (path, "r");
-    	    free(path);
-        }
+        path = get_config_item_path("my_loc_history.txt");
+        fp = fopen (path, "r");
+	    free(path);
     }
 
     /* grab latest adds */
