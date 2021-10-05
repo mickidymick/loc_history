@@ -1,5 +1,4 @@
 #include <yed/plugin.h>
-
 #include <yed/tree.h>
 typedef char *yedrc_path_t;
 typedef struct loc_data{
@@ -15,6 +14,7 @@ void update_loc_history(yed_event *event);
 void write_back_loc_history(yed_event *event);
 void unload(yed_plugin *self);
 
+int loc_history_initialized;
 tree(yedrc_path_t, loc_data_t) hist;
 yed_event_handler h1;
 
@@ -22,6 +22,7 @@ int yed_plugin_boot(yed_plugin *self) {
     yed_event_handler h;
 
     YED_PLUG_VERSION_CHECK();
+    loc_history_initialized = 0;
 
     yed_plugin_set_unload_fn(self, unload);
     hist = tree_make(yedrc_path_t, loc_data_t);
@@ -30,7 +31,7 @@ int yed_plugin_boot(yed_plugin *self) {
     h1.fn   = init_loc_history;
     yed_plugin_add_event_handler(self, h1);
 
-    h.kind = EVENT_BUFFER_POST_LOAD;
+    h.kind = EVENT_FRAME_POST_SET_BUFFER;
     h.fn   = set_start_loc_from_history;
     yed_plugin_add_event_handler(self, h);
 
@@ -52,13 +53,19 @@ void init_loc_history(yed_event *event) {
     char *path;
     FILE *fp;
 
+    if (loc_history_initialized == 0) {
+        loc_history_initialized = 1;
+    } else {
+      return;
+    }
+
     strcpy(app, "/my_loc_history.txt");
 
     LOG_FN_ENTER();
     if (!ys->options.no_init) {
         path = get_config_item_path("my_loc_history.txt");
         fp = fopen (path, "r");
-        yed_cerr("path: %s\n", path);
+/*         yed_cerr("path: %s\n", path); */
 	    free(path);
     }
 
@@ -84,33 +91,39 @@ void init_loc_history(yed_event *event) {
     fclose(fp);
     yed_delete_event_handler(h1);
 
-    yed_cprint("loc_history initialized");
-
-    yed_cerr("size: %d\n", tree_len(hist));
+    yed_log("loc_history initialized: %d files loaded", tree_len(hist));
     LOG_EXIT();
 }
 
 void set_start_loc_from_history(yed_event *event) {
     char file_name[512];
     loc_data_t tmp;
+
     yed_frame *frame;
     frame = event->frame;
 
+    LOG_FN_ENTER();
+
     if (!frame
-    ||  !event->buffer
-    ||  event->buffer->kind != BUFF_KIND_FILE) {
+    ||  !frame->buffer
+    ||  frame->buffer->path == NULL
+    ||  frame->buffer->kind != BUFF_KIND_FILE) {
         return;
     }
 
     tree_it(yedrc_path_t, loc_data_t) it;
-    abs_path(event->path, file_name);
+    abs_path(frame->buffer->path, file_name);
 
     it = tree_lookup(hist, file_name);
     if( tree_it_good(it) ) {
         tmp = tree_it_val(it);
-        yed_set_cursor_within_frame(frame, tmp.row, tmp.col);
-        tree_it_val(it).can_update = 1;
+        if(tmp.can_update == 0) {
+            yed_set_cursor_within_frame(frame, tmp.row, tmp.col);
+            tree_it_val(it).can_update = 1;
+            yed_log("%s: %d:%d", frame->buffer->path, tmp.row, tmp.col);
+        }
     }
+    LOG_EXIT();
 }
 
 void update_loc_history(yed_event *event) {
