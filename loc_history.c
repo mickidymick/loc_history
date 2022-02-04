@@ -81,6 +81,10 @@ void init_loc_history(yed_event *event) {
         tmp_path = strtok(line, s);
         tmp_row = strtok(NULL, s);
         tmp_col = strtok(NULL, s);
+	    
+	if (tmp_path == NULL || tmp_row == NULL || tmp_col == NULL){
+	    continue;
+	}
 
         loc_data_t tmp;
         tmp.row = atoi(tmp_row);
@@ -187,6 +191,10 @@ void write_back_loc_history(yed_event *event) {
         tmp_path = strtok(line, s);
         tmp_row = strtok(NULL, s);
         tmp_col = strtok(NULL, s);
+	    
+	if (tmp_path == NULL || tmp_row == NULL || tmp_col == NULL){
+	    continue;
+	}
 
         loc_data_t tmp;
         tmp.row = atoi(tmp_row);
