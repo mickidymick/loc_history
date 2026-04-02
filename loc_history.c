@@ -139,6 +139,7 @@ void update_loc_history(yed_event *event) {
 
     if (!frame
     ||  !frame->buffer
+    ||  frame->buffer->path == NULL
     ||  frame->buffer->kind != BUFF_KIND_FILE) {
         return;
     }
