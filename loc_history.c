@@ -205,7 +205,7 @@ void write_back_loc_history(yed_event *event) {
         it = tree_lookup(hist, tmp_path);
         if( tree_it_good(it) ) {
             if(tree_it_val(it).can_update == 0) {
-                tree_insert(hist, strdup(tmp_path), tmp);
+                tree_it_val(it) = tmp;
             }
         }else {
             tree_insert(hist, strdup(tmp_path), tmp);
